@@ -35,18 +35,18 @@ public class BTree {
             return null;
 
         int valNum = node.getNum();
-        int[] nodeVals = node.getVals();
-        BTreeNode[] nodeChilds = node.getChilds();
+        List<Integer> nodeVals = node.getVals();
+        List<BTreeNode> nodeChilds = node.getChilds();
 
         List<Integer> result = new ArrayList<Integer>();
         int i;
         for(i = 0; i< valNum; i++){
-            List<Integer> tmp = midTrace(nodeChilds[i]);
+            List<Integer> tmp = midTrace(nodeChilds.get(i));
             if (tmp != null)
                 result.addAll(tmp);
-            result.add(nodeVals[i]);
+            result.add(nodeVals.get(i));
         }
-        List<Integer> tmp = midTrace(nodeChilds[i]);
+        List<Integer> tmp = midTrace(nodeChilds.get(i));
         if(tmp != null)
             result.addAll(tmp);
         return result;
@@ -59,8 +59,7 @@ public class BTree {
     }
 
     private void splitNode(BTreeNode node){
-
-        if (!node.isOverNode())
+        if (node == null || !node.isOverNode())
             return;
 
         BTreeNode parent = node.getParent();
@@ -70,12 +69,12 @@ public class BTree {
         }
 
         //分两个node。
-        BTreeNode[] nodeChilds = node.getChilds();
-        int[] nodeVals = node.getVals();
+        List<BTreeNode> nodeChilds = node.getChilds();
+        List<Integer> nodeVals = node.getVals();
         int nodeNum = node.getNum();
         BTreeNode newNode = new BTreeNode(rank - 1);
         int midIdx = nodeNum / 2 ;
-        int midVal = nodeVals[midIdx];
+        int midVal = nodeVals.get(midIdx);
 
         int[] newNodeVals = new int[nodeNum - midIdx - 1];
         BTreeNode[] newNodeChilds = new BTreeNode[nodeNum - midIdx];
@@ -83,11 +82,11 @@ public class BTree {
         int i;
         int idx = 0;
         for (i = midIdx + 1; i < nodeNum; i++){
-            newNodeVals[idx] = nodeVals[i];
-            newNodeChilds[idx] = nodeChilds[i];
+            newNodeVals[idx] = nodeVals.get(i);
+            newNodeChilds[idx] = nodeChilds.get(i);
             idx++;
         }
-        newNodeChilds[idx] = nodeChilds[i];
+        newNodeChilds[idx] = nodeChilds.get(i);
         newNode.setNode(newNodeVals, newNodeChilds, newNodeVals.length);
 
         node.setNum(midIdx);
@@ -104,21 +103,19 @@ public class BTree {
     //如果BTreeNode只是单纯数据存储，那么操作可以放在高层。
     private int insertValToNode(BTreeNode node, int val, BTreeNode child1, BTreeNode child2){
         int i;
-        int[] nodeVals = node.getVals();
-        BTreeNode[] nodeChilds = node.getChilds();
+        List<Integer> nodeVals = node.getVals();
+        List<BTreeNode> nodeChilds = node.getChilds();
         int valNum = node.getNum();
-        nodeVals[valNum] = val; //因为node.val 设置比最大个数多一个，因此可以直接加入，不会越界。
         for(i = valNum - 1; i >= 0; i--){
-            if (nodeVals[i] < val)
+            if (nodeVals.get(i) < val)
                 break;
-            if (nodeVals[i] > val) {
-                nodeVals[i + 1] = nodeVals[i];
-                nodeChilds[i + 2] = nodeChilds[i + 1];
-            }
         }
-        nodeVals[i + 1] = val;
-        nodeChilds[i + 1] = child1;
-        nodeChilds[i + 2] = child2;
+        nodeVals.add(i + 1, val);
+        if (nodeChilds.size() == i+1)
+            nodeChilds.add(i + 1, child1);
+        else
+            nodeChilds.set(i+1, child1);
+        nodeChilds.add(i + 2, child2);
         node.setNum(valNum+1);
         return i+1;
     }
@@ -127,17 +124,15 @@ public class BTree {
         //找到要插入的node。该node是叶子node。 即找到要插入的叶子节点。
         BTreeNode tmp = root;
         int i;
-        while(true) {
-            BTreeNode[] tmpChilds = tmp.getChilds();
-            int[] tmpVals = tmp.getVals();
+        while(!tmp.isLeafNode()) {
+            List<BTreeNode> tmpChilds = tmp.getChilds();
+            List<Integer> tmpVals = tmp.getVals();
             int valNum = tmp.getNum();
             for (i = valNum - 1; i >= 0; i--) {
-                if (tmpVals[i] < val)
+                if (tmpVals.get(i) < val)
                     break;
             }
-            if (tmpChilds[i+1] == null)
-                break;
-            tmp = tmpChilds[i + 1];
+            tmp = tmpChilds.get(i + 1);
         }
 
         //这里tmp是叶子节点
@@ -151,23 +146,22 @@ public class BTree {
     }
 
     private boolean midSearch(BTreeNode node, int val){
-
-        if (node == null)
+        if (node == null || node.getNum() == 0)
             return false;
 
-        int []nodeVals = node.getVals();
-        BTreeNode[] nodeChilds = node.getChilds();
+        List<Integer> nodeVals = node.getVals();
+        List<BTreeNode> nodeChilds = node.getChilds();
         int valNum = node.getNum();
         int childIdx = 0;
         for (int i = 0; i < valNum; i++){
-            if (nodeVals[i] == val)
+            if (nodeVals.get(i) == val)
                 return true;
-            if (nodeVals[i] < val)
+            if (nodeVals.get(i) < val)
                 childIdx = i + 1;
-            else if (nodeVals[i] > val)
+            else if (nodeVals.get(i) > val)
                 break;
         }
-        return midSearch(nodeChilds[childIdx], val);
+        return midSearch(nodeChilds.get(childIdx), val);
 
     }
 
@@ -211,78 +205,72 @@ public class BTree {
 
 
 
-}
-
-
-
 //要实现一个算法，数据结构也很重要。 组织数据结构直接的关系，想想为什么这么设计，为什么将操作放在这个数据结构中等等。
 
-//BTreeNode 简单的数据结构。 复杂的操作应该给更高层次的BTree操作,涉及node下的孩子操作，应该交由高层BTree来做。或者说
+    //BTreeNode 简单的数据结构。 复杂的操作应该给更高层次的BTree操作,涉及node下的孩子操作，应该交由高层BTree来做。或者说
 //BTreeNode只是简单的数据载体。
 //BTreeNode 通用的结构，而非特殊化。
-class BTreeNode{
-    private int maxNum;
-    private int num; //节点的值的个数。 孩子的个数=节点值的个数 + 1； 阶数=最大的孩子个个数。
-    private int[] vals; //  val是按顺序排列好的。 用链表更好。数组其实有点麻烦，增删要移动。用链表的话增删方便，也不需要处理索引。
-    private BTreeNode[] childs;
-    //改用List替换int[],能避免我们自己手动移动。
-    //List<Integer> vals;
-    //List<BTreeNode> childs = new ArrayList<>();
+    private class BTreeNode{
+        private int maxNum;
+        private int num; //节点的值的个数。 孩子的个数=节点值的个数 + 1； 阶数=最大的孩子个个数。
+        private List<Integer> vals; //  val是按顺序排列好的。 用链表更好。数组其实有点麻烦，增删要移动。用链表的话增删方便，也不需要处理索引。
+        private List<BTreeNode> childs;
+        //改用List替换int[],能避免我们自己手动移动。
+        //List<Integer> vals;
+        //List<BTreeNode> childs = new ArrayList<>();
 
-    //或使用链表。
+        //或使用链表。
+
+        private BTreeNode parent;
 
 
-    private BTreeNode parent;
-    public BTreeNode(int maxNum){
-        this.maxNum = maxNum;
-        this.num = 0;
-        //+1为了方便处理满时的情况。
-        vals = new int[maxNum + 1];//new int[Integer.MAX_VALUE]; // 不应该设置这么大，浪费。 可以改进为动态空间扩展，像HashMap那样数组的size动态的。
-        //孩子数是值的个数+1。 再+1是为了处理满时的情况。
-        childs = new BTreeNode[maxNum + 2];//new BTreeNode[Integer.MAX_VALUE];
-        for (int i = 0; i < childs.length; i++)
-            childs[i] = null;
-        this.parent = null;
-    }
-
-    public boolean isOverNode(){
-        return this.num > this.maxNum;
-    }
-    public boolean isLeafNode(){
-        return this.childs[0] == null;
-    }
-    public boolean isRootNode(){
-        return this.parent == null;
-    }
-    public int[] getVals(){
-        return vals;
-    }
-    public BTreeNode[] getChilds(){
-        return this.childs;
-    }
-    public int getNum(){
-        return this.num;
-    }
-    public void setNum(int num){
-        this.num = num;
-    }
-    public BTreeNode getParent(){
-        return this.parent;
-    }
-    public void setParent(BTreeNode parent){
-        this.parent = parent;
-    }
-    public boolean setNode(int[] val, BTreeNode[] childs, int len){
-        if (len > val.length || len + 1 > childs.length)
-            return false;
-        int i;
-        for (i = 0; i < len; i++){
-            this.vals[i] = val[i];
-            this.childs[i] = childs[i];
+        public BTreeNode(int maxNum){
+            this.maxNum = maxNum;
+            this.num = 0;
+            this.vals = new ArrayList<Integer>();
+            this.childs = new ArrayList<BTreeNode>();
+            this.parent = null;
         }
-        this.childs[i] = childs[i];
-        this.num = len;
-        return true;
+
+        public boolean isOverNode(){
+            return this.num > this.maxNum;
+        }
+        public boolean isLeafNode(){
+            return this.childs.size() == 0 || this.childs.get(0) == null;
+        }
+        public boolean isRootNode(){
+            return this.parent == null;
+        }
+        public List<Integer> getVals(){
+            return vals;
+        }
+        public List<BTreeNode> getChilds(){
+            return this.childs;
+        }
+        public int getNum(){
+            return this.num;
+        }
+        public void setNum(int num){
+            this.num = num;
+        }
+        public BTreeNode getParent(){
+            return this.parent;
+        }
+        public void setParent(BTreeNode parent){
+            this.parent = parent;
+        }
+        public boolean setNode(int[] vals, BTreeNode[] childs, int len){
+            if (len > vals.length || len + 1 > childs.length)
+                return false;
+            int i;
+            for (i = 0; i < len; i++){
+                this.vals.add(vals[i]);
+                this.childs.add(childs[i]);
+            }
+            this.childs.add(childs[i]);
+            this.num = len;
+            return true;
+        }
     }
 
 }
@@ -321,5 +309,8 @@ class Test{
 
         ArrayList<Integer> sa = new ArrayList<>();
         LinkedList<Integer> ll = new LinkedList<Integer>();
+
+//        System.out.println(sa.get(0));
+
     }
 }

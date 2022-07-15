@@ -175,7 +175,7 @@ public class BTree {
 
     public static void main(String[] args) {
 
-        BTree bt = new BTree(new int[]{10,5,2,14,7,11,6,9,15,3,8,4,12,13,16} , 5); //
+        BTree bt = new BTree(new int[]{10,5,2,14,7,11,6,9,15,3,8,4,12,13,16} , 6); //
         List<Integer> l = bt.midTrace();
         System.out.println(l);
 
@@ -183,6 +183,12 @@ public class BTree {
         System.out.println(bt.hasNode(1));
         System.out.println(bt.hasNode(15));
 
+        bt.addNode(10);
+        bt.addNode(14);
+        bt.addNode(12);
+        bt.addNode(10);
+        bt.addNode(14);
+        bt.addNode(12);
         bt.addNode(10);
         bt.addNode(14);
         bt.addNode(12);
@@ -213,7 +219,8 @@ public class BTree {
     private class BTreeNode{
         private int maxNum;
         private int num; //节点的值的个数。 孩子的个数=节点值的个数 + 1； 阶数=最大的孩子个个数。
-        private List<Integer> vals; //  val是按顺序排列好的。 用链表更好。数组其实有点麻烦，增删要移动。用链表的话增删方便，也不需要处理索引。
+        private List<Integer> vals; // val是按顺序排列好的。 用链表更好。数组其实有点麻烦，增删要移动。用链表的话增删方便，也不需要处理索引。
+                                    //数组更直接暴力。 各有各的好处。
         private List<BTreeNode> childs;
         //改用List替换int[],能避免我们自己手动移动。
         //List<Integer> vals;

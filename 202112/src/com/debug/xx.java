@@ -10,12 +10,12 @@ public class xx extends lxr {
 
     public int print(){
         System.out.println(age);
-        new lxr().age;
+//        new lxr().age;
         return 0;
     }
 
     public static void main(String[] args) {
         new xx().print();
-        new lxr().age;
+//        new lxr().age;
     }
 }

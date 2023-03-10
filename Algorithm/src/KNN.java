@@ -1,6 +1,5 @@
-import sun.tools.tree.InstanceOfExpression;
-
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author rzet
@@ -132,22 +131,31 @@ class KDTree{
         }
 
 
-        Double maxDis = 0.0;
+        final Double[] maxDis = {Double.MAX_VALUE};
         while (!nodeStack.isEmpty()){
             KDNode node = nodeStack.pop();
-            Optional<Double> res = knnDis.stream().max(Double::compare);
-            if (!res.isPresent())
-                maxDis = Double.MAX_VALUE;
-            else
-                maxDis = res.get();
+//            Optional<Double> res = knnDis.stream().max(Double::compare);
+//            if (!res.isPresent())
+//                maxDis = Double.MAX_VALUE;
+//            else
+//                maxDis = res.get();
+//
+//
+            //神奇！
+            //在匿名内部类中要更改变量，要设置成final。
+            //但是又想更改边狼值怎么办？ 1.使用数组形式。 2.使用AtomicReference<Double> maxDis
+            knnDis.stream().max(Double::compare).ifPresent(p-> maxDis[0] = p.doubleValue());
+//            AtomicReference<Double> mas = new AtomicReference<>((double) 0);
+//            knnDis.stream().max(Double::compare).ifPresent(p-> mas.set(p.doubleValue()));
+
 
             double curDis = computerDist(query, node.val);
 
             if(knnNodes.size() < k){
                 knnNodes.add(node);
                 knnDis.add(curDis);
-            }else if (maxDis > curDis){
-                int idx = knnDis.indexOf(maxDis);
+            }else if (maxDis[0] > curDis){
+                int idx = knnDis.indexOf(maxDis[0]);
                 knnNodes.remove(idx);
                 knnDis.remove(idx);
                 knnNodes.add(node);
@@ -155,7 +163,7 @@ class KDTree{
             }
 
 
-            if (knnNodes.size() < k || Math.abs(query[node.splitByD] - node.val[node.splitByD]) < maxDis){
+            if (knnNodes.size() < k || Math.abs(query[node.splitByD] - node.val[node.splitByD]) < maxDis[0]){
                 if (node.leftChild != null && node.leftChild.visited == false){
                     nodeStack.push(node.leftChild);
                     node.leftChild.visited = true;

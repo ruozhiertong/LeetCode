@@ -1,3 +1,5 @@
+import java.text.FieldPosition;
+
 /**
  * 105. 从前序与中序遍历序列构造二叉树
  * 给定一棵树的前序遍历 preorder 与中序遍历  inorder。请构造二叉树并返回其根节点。
@@ -75,4 +77,35 @@ class TreeNode {
         this.left = left;
         this.right = right;
     }
+}
+
+
+class BinaryTree{
+
+    TreeNode root;
+
+    public  BinaryTree(){
+        root = null;
+    }
+
+
+
+    // 1 2 0 0
+    //前 中 后序进行创建。 遇到0表示null
+    public void init(int[] arr){
+        TreeNode ptr = root;
+        for (int e: arr){
+            TreeNode node = new TreeNode(e);
+            ptr = node;
+            ptr.left =
+
+        }
+    }
+
+
+    public void insertNode(TreeNode node){
+
+    }
+
+
 }
